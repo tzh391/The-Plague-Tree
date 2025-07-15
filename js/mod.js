@@ -493,6 +493,7 @@ var displayThings = [
 		for (i = 0; i<10; i++){
 			c += lastTenTicks[i] / 10000
 		}
+		if (paused || player.paused) return "<bdi style='color:#CC0033'>THE GAME IS PAUSED</bdi>"
         let d = isEndgame()?makeBlue("<br>You are past endgame,<br>and the game might not be balanced here."):""
 		return b + " Average TPS = " + format(c, 3) + "s/tick."+d
 	}
