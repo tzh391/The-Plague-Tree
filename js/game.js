@@ -527,35 +527,79 @@ function hardReset(resetOptions) {
 	save(true);
 	window.location.reload();
 }
+function setUpPGSettings(){
+	player.autosave = false
+	player.arrowHotkeys = true
+	player.forceOneTab = false
+	player.showBuiltInSaves = true
+	player.toggleKeys = false
+	player.undulating = false
+	player.spaceBarPauses = true
+}
+
 var ticking = false
-var lastTenTicks = []
-var interval
-var tickWait = 0
-var tickWaitStart = 0
-function input () {
-	value = document.getElementById("myRange").value
-	document.getElementById("demo").innerHTML = value
-	player.ms = Number(value)
-	clearInterval(interval)
-	startInterval()
-}
-function startInterval() {
-	interval = setInterval(function() {
-	tickWait = 1/0
+var paused = false
+var logTicks = [false, false]
+var pastTickTimes = []
 
-	var tickStart = new Date().getTime()
-	try {
-		gameLoop()
-	} catch (e) {
-		console.error(e)
+function runInterval(){
+	if (player === undefined || tmp === undefined) return;
+	if (ticking) return;
+	if (tmp.gameEnded && !player.keepGoing) return;
+	ticking = true
+	let now = Date.now()
+	let diff = (now - player.time) / 1e3
+	let trueDiff = diff
+
+	if (player.offTime !== undefined) {
+		if (player.offTime.remain > modInfo.offlineLimit * 3600) player.offTime.remain = modInfo.offlineLimit * 3600
+		if (player.offTime.remain > 0) {
+			let offlineDiff = Math.max(player.offTime.remain / 10, diff)
+			player.offTime.remain -= offlineDiff
+			diff += offlineDiff
+		}
+		if (!player.offlineProd || player.offTime.remain <= 0) player.offTime = undefined
 	}
-	var tickEnd = new Date().getTime()
-	var tickDiff = tickEnd - tickStart
-
-	tickWait = tickDiff * 2
-	tickWaitStart = tickEnd
-	}, player.ms);
+	if (paused || player.paused) diff = 0
+	if (player.cells.slowTime > 0) {
+		player.cells.slowTime -= diff 
+		if (player.cells.slowTime < 0) player.cells.slowTime = 0
+		diff *= .01
+	}
+	if (player.devSpeed != undefined) diff *= player.devSpeed
+	
+	player.time = now
+	player.shiftAlias = shiftDown
+	player.controlAlias = controlDown
+	if (needCanvasUpdate){ 
+		resizeCanvas();
+		needCanvasUpdate = false;
+	}
+	tmp.scrolled = document.getElementById('treeTab') && document.getElementById('treeTab').scrollTop > 30
+	currentDelta = 0
+	updateTemp();
+	if (diff > 0) updateOomps(diff);
+	updateWidth()
+	updateTabFormats()
+	if (isEndgame() || tmp.gameEnded){
+		tmp.gameEnded = true
+		clearParticles()
+	}
+	if (diff > 0) gameLoop(diff)
+	fixNaNs()
+	adjustPopupTime(trueDiff)
+	updateParticles(trueDiff)
+	pastTickTimes = [Date.now() - now].concat(pastTickTimes.slice(0, 9))
+	if (logTicks[0]) console.log("tick ran")
+	ticking = false
+	if (logTicks[1]) console.log("tick logged")
 }
+/* */
 
+var interval = setInterval(function() {
+	runInterval()
+}, 50)
+
+/* */
 
 setInterval(function() {needCanvasUpdate = true}, 500)
