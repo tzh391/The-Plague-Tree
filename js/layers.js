@@ -470,6 +470,16 @@ addLayer("v", {
                     doReset(this.layer)
             }
         },
+        {
+                        key: " ", 
+                        description: "Space: Toggle Pause", 
+                        onPress(){
+                                if (player.spaceBarPauses) player.paused = !player.paused
+                        },
+                        unlocked(){
+                                return true
+                        },
+                },
     ],
     update(diff) {
         if (hasMilestone("i", 1)) generatePoints("v", diff);
