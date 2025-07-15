@@ -434,7 +434,7 @@ function gameLoop() {
 		}
 		if (!options.offlineProd || player.offTime.remain <= 0) player.offTime = undefined
 	}
-	if (paused || player.paused) Diff = 0
+	if (paused || player.paused) diff = 0
 	if (player.devSpeed) diff *= player.devSpeed
 	player.time = now
 	if (needCanvasUpdate){ resizeCanvas();
