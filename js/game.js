@@ -315,6 +315,10 @@ function toggleShift() {
 	shiftDown = !shiftDown
 }
 
+function setUpPGSettings(){
+	player.spaceBarPauses = true
+}
+
 function resetRow(row) {
 	if (prompt('Are you sure you want to reset this row? It is highly recommended that you wait until the end of your current run before doing this! Type "I WANT TO RESET THIS" to confirm')!="I WANT TO RESET THIS") return
 	let pre_layers = ROW_LAYERS[row-1]
@@ -396,7 +400,7 @@ function completeChallenge(layer, x) {
 
 VERSION.withoutName = "v" + VERSION.num + (VERSION.pre ? " Pre-Release " + VERSION.pre : VERSION.pre ? " Beta " + VERSION.beta : "")
 VERSION.withName = VERSION.withoutName + (VERSION.name ? ": " + VERSION.name : "")
-
+var paused = false
 
 function autobuyUpgrades(layer){
 	if (!tmp[layer].upgrades) return
@@ -430,6 +434,7 @@ function gameLoop() {
 		}
 		if (!options.offlineProd || player.offTime.remain <= 0) player.offTime = undefined
 	}
+	if (paused || player.paused) Diff = 0
 	if (player.devSpeed) diff *= player.devSpeed
 	player.time = now
 	if (needCanvasUpdate){ resizeCanvas();
@@ -528,12 +533,9 @@ function hardReset(resetOptions) {
 	window.location.reload();
 }
 
-function setUpPGSettings(){
-	player.spaceBarPauses = true
-}
+
 
 var ticking = false
-var paused = false
 var lastTenTicks = []
 var interval
 var tickWait = 0
@@ -557,7 +559,6 @@ function startInterval() {
 	}
 	var tickEnd = new Date().getTime()
 	var tickDiff = tickEnd - tickStart
-        if (paused || player.paused) tickDiff = 0
 	tickWait = tickDiff * 2
 	tickWaitStart = tickEnd
 	}, player.ms);
